@@ -1,6 +1,9 @@
 package kql
 
-import "khasa/src/utils/slices"
+import (
+	"khasa/src/utils/slices"
+	"khasa/src/utils/strings"
+)
 
 // General commands and their expected arguments
 var commands = []string{
@@ -30,11 +33,42 @@ var setCommandOptions = []string{
 	"TTL",
 }
 
-var setCommandOptionValues = map[string][]interface{}{
-	"TYPE": []interface{}{"EXACT:STRING", "EXACT:INT", "EXACT:FLOAT", "EXACT:BOOL"},
-	"TTL":  []interface{}{"TYPE:INT"},
+var setCommandOptionValues = map[string][][]string{
+	"TYPE": [][]string{
+		[]string{"STRING", "EXACT"},
+		[]string{"INT", "EXACT"},
+		[]string{"FLOAT", "EXACT"},
+		[]string{"BOOL", "EXACT"},
+	},
+	"TTL": [][]string{
+		[]string{"INT", "TYPE"},
+	},
 }
 
 func IsSetCommandOptionValid(option string) bool {
 	return slices.Contains(setCommandOptions, option)
+}
+
+func IsSetCommandOptionValueValid(option string, value string) bool {
+	for _, v := range setCommandOptionValues[option] {
+		t := v[0]
+		condition := v[1]
+
+		if condition == "EXACT" && value == t {
+			return true
+		}
+
+		if condition == "TYPE" {
+			switch t {
+			case "STRING":
+				return true
+			case "INT":
+				if strings.IsValidInt(value) {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
 }
